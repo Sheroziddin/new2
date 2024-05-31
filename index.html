@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing App</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        #drawingCanvas {
+            border: 1px solid black;
+            width: 80vw; /* Используем относительную ширину */
+            max-width: 500px; /* Максимальная ширина для больших экранов */
+            height: 80vw; /* Высота равна ширине для сохранения пропорций */
+            max-height: 500px; /* Максимальная высота для больших экранов */
+            touch-action: none; /* Отключаем скроллинг при касании */
+        }
+        .button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <canvas id="drawingCanvas"></canvas>
+        <br>
+        <button class="button" onclick="clearCanvas()">Отменить</button>
+        <button class="button" onclick="sendDrawing()">Отправить</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const context = canvas.getContext('2d');
+        let drawing = false;
+
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchmove', draw);
+
+        function startDrawing(event) {
+            drawing = true;
+            draw(event);
+        }
+
+        function stopDrawing() {
+            drawing = false;
+            context.beginPath();
+        }
+
+        function draw(event) {
+            event.preventDefault(); // Предотвращаем стандартное поведение браузера (например, скроллинг)
+            if (!drawing) return;
+            const touch = event.touches[0];
+            context.lineWidth = 5;
+            context.lineCap = 'round';
+            context.strokeStyle = 'black';
+            context.lineTo(touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top);
+            context.stroke();
+            context.beginPath();
+            context.moveTo(touch.clientX - canvas.getBoundingClientRect().left, touch.clientY - canvas.getBoundingClientRect().top);
+        }
+
+        function clearCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function sendDrawing() {
+            const dataUrl = canvas.toDataURL();
+            Telegram.WebApp.sendData(dataUrl);
+        }
+
+        Telegram.WebApp.ready();
+    </script>
+</body>
+</html>
